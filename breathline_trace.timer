@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Breathline Trace every 10 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=10min
+Unit=breathline_trace.service
+
+[Install]
+WantedBy=timers.target
