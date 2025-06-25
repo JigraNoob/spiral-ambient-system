@@ -1,17 +1,29 @@
-node_modules
-.env
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.sqlite3
 
-# Hardhat files
-/cache
-/artifacts
+# Environments
+env/
+.venv/
+venv/
+ENV/
 
-# TypeChain files
-/typechain
-/typechain-types
+# OS junk
+.DS_Store
+Thumbs.db
 
-# solidity-coverage files
-/coverage
-/coverage.json
+# Notebooks
+.ipynb_checkpoints/
 
-# Hardhat Ignition default folder for deployments against a local node
-ignition/deployments/chain-31337
+# Logs & data
+*.log
+*.jsonl
+data/logs/
+data/streams/
+
+# Frontend builds (optional)
+node_modules/
+dist/
+build/
