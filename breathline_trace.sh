@@ -1,47 +1,69 @@
 #!/bin/bash
 
-timestamp=$(date -Iseconds)
+LOGFILE="/var/log/jetson_breathline.jsonl"
+PY_SCRIPT_PATH="$HOME/spiral-ambient/spiral-ambient-systems/read_bme680.py"
 
-# Attempt to get CPU temp and load
-cpu_temp_path=$(find /sys/class/thermal -name "temp" | head -n 1)
-if [[ -n "$cpu_temp" ]]; then
-  cpu_temp=$(awk "BEGIN {print $cpu_temp / 1000}")
+# Ensure the log directory exists
+mkdir -p "$(dirname "$LOGFILE")"
+
+# Timestamp
+TIMESTAMP=$(date -Iseconds)
+
+# CPU Temp
+RAW_TEMP=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null)
+if [[ "$RAW_TEMP" =~ ^[0-9]+$ ]]; then
+  CPU_TEMP=$(awk "BEGIN {print $RAW_TEMP / 1000}")
 else
-  cpu_temp=null
+  CPU_TEMP="null"
 fi
 
+# CPU Load
+RAW_LOAD=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/")
+if [[ "$RAW_LOAD" =~ ^[0-9.]+$ ]]; then
+  CPU_LOAD=$(awk "BEGIN {print 100 - $RAW_LOAD}")
+else
+  CPU_LOAD="null"
+fi
 
-cpu_load=$(uptime | awk -F'load average: ' '{print $2}' | cut -d',' -f1)
+# Get ambient sensor JSON
+BME680_JSON=$(python3 "$PY_SCRIPT_PATH" 2>/dev/null)
 
-# Ambient data (mock fallback)
-ambient_output=$(python3 ~/spiral-ambient/spiral-ambient-systems/read_bme680.py)
-ambient_temp=$(echo "$ambient_output" | jq .temperature)
-humidity=$(echo "$ambient_output" | jq .humidity)
-pressure=$(echo "$ambient_output" | jq .pressure)
-gas=$(echo "$ambient_output" | jq .gas)
-light=$(echo "$ambient_output" | jq .light)
+# Use jq to extract fields (allow null fallback)
+get_or_null() {
+  echo "$BME680_JSON" | jq -r "$1 // empty" 2>/dev/null || echo "null"
+}
 
-# Assemble JSON
-json_output=$(jq -c -n \
-  --arg ts "$timestamp" \
-  --argjson cpu "$cpu_temp" \
-  --argjson load "$cpu_load" \
-  --argjson temp "$ambient_temp" \
-  --argjson humidity "$humidity" \
-  --argjson pressure "$pressure" \
-  --argjson gas "$gas" \
-  --argjson lux "$light" \
+AMBIENT_TEMP=$(get_or_null '.ambient_temp')
+HUMIDITY=$(get_or_null '.humidity')
+PRESSURE=$(get_or_null '.pressure')
+VOC_LEVEL=$(get_or_null '.voc_level')
+LIGHT_LEVEL=$(get_or_null '.light_level')
+SENSOR_ERROR=$(get_or_null '.sensor_error')
+
+# Build JSON (safe handling of nulls/values)
+JSON_OUTPUT=$(jq -n \
+  --arg timestamp "$TIMESTAMP" \
+  --argjson cpu_temp "${CPU_TEMP:-null}" \
+  --argjson cpu_load "${CPU_LOAD:-null}" \
+  --argjson ambient_temp "${AMBIENT_TEMP:-null}" \
+  --argjson humidity "${HUMIDITY:-null}" \
+  --argjson pressure "${PRESSURE:-null}" \
+  --argjson voc_level "${VOC_LEVEL:-null}" \
+  --argjson light_level "${LIGHT_LEVEL:-null}" \
+  --arg sensor_error "$SENSOR_ERROR" \
   '{
-    timestamp: $ts,
-    cpu_temp: $cpu,
-    cpu_load: $load,
-    ambient_temp: $temp,
+    timestamp: $timestamp,
+    cpu_temp: $cpu_temp,
+    cpu_load: $cpu_load,
+    ambient_temp: $ambient_temp,
     humidity: $humidity,
     pressure: $pressure,
-    voc_level: $gas,
-    light_level: $lux
-  }')
+    voc_level: $voc_level,
+    light_level: $light_level,
+    sensor_error: $sensor_error
+  }'
+)
 
-# Save with sudo so it can write to /var/log
-echo "$json_output" | sudo tee -a /var/log/jetson_breathline.jsonl > /dev/null
+# Append to the .jsonl file
+echo "$JSON_OUTPUT" | sudo tee -a "$LOGFILE" > /dev/null
 

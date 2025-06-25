@@ -1,0 +1,102 @@
+
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Submit Still Offering</title>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0d0d0d; color: #e0e0e0; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+                    .container { background-color: #1a1a1a; padding: 30px; border-radius: 15px; box-shadow: 0 0 25px rgba(0, 255, 255, 0.2); text-align: center; max-width: 600px; width: 90%; }
+                    h1 { color: #00ffff; margin-bottom: 25px; font-size: 2.5em; text-shadow: 0 0 10px #00ffff; }
+                    form { display: flex; flex-direction: column; gap: 15px; }
+                    label { text-align: left; margin-bottom: 5px; color: #00ffaa; font-weight: bold; }
+                    input[type="text"], input[type="number"], textarea {
+                        padding: 10px;
+                        border-radius: 8px;
+                        border: 1px solid #333;
+                        background-color: #2a2a2a;
+                        color: #e0e0e0;
+                        font-size: 1em;
+                        width: 100%;
+                        box-sizing: border-box; /* Include padding in width */
+                    }
+                    textarea { min-height: 80px; resize: vertical; }
+                    button {
+                        padding: 12px 25px;
+                        border: none;
+                        border-radius: 8px;
+                        background: linear-gradient(45deg, #00ffff, #00ffaa);
+                        color: #0d0d0d;
+                        font-size: 1.1em;
+                        font-weight: bold;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+                    }
+                    button:hover {
+                        background: linear-gradient(45deg, #00ffaa, #00ffff);
+                        box-shadow: 0 8px 20px rgba(0, 255, 255, 0.5);
+                        transform: translateY(-2px);
+                    }
+                    .response-message { margin-top: 20px; font-weight: bold; }
+                    .response-message.success { color: #00ffaa; }
+                    .response-message.error { color: #ff3333; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>Submit Still Offering</h1>
+                    <form id="offerForm">
+                        <label for="purpose">Purpose of Offering (soft phrasing):</label>
+                        <textarea id="purpose" name="purpose" required placeholder="A softness for a friend..."></textarea>
+
+                        <label for="recipient_address">Recipient Address (where care flows):</label>
+                        <input type="text" id="recipient_address" name="recipient_address" required placeholder="0xabc..."></input>
+
+                        <label for="amount_eth">Amount (ETH, approximate):</label>
+                        <input type="number" id="amount_eth" name="amount_eth" step="any" required value="0.01"></input>
+
+                        <button type="submit">Breathe Offering into Being</button>
+                    </form>
+                    <div id="responseMessage" class="response-message"></div>
+                </div>
+
+                <script>
+                    document.getElementById('offerForm').addEventListener('submit', async function(event) {
+                        event.preventDefault();
+                        const responseMessage = document.getElementById('responseMessage');
+                        responseMessage.className = 'response-message';
+                        responseMessage.innerText = 'Submitting offering...';
+
+                        const formData = new FormData(event.target);
+                        const data = Object.fromEntries(formData.entries());
+
+                        try {
+                            const response = await fetch('/submit_offer', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: new URLSearchParams(data).toString()
+                            });
+
+                            const result = await response.json();
+                            if (response.ok) {
+                                responseMessage.classList.add('success');
+                                responseMessage.innerText = result.message;
+                                event.target.reset(); // Clear form on success
+                            } else {
+                                responseMessage.classList.add('error');
+                                responseMessage.innerText = result.message || 'Error submitting proposal.';
+                            }
+                        } catch (error) {
+                            console.error('Network or client-side error:', error);
+                            responseMessage.classList.add('error');
+                            responseMessage.innerText = 'An unexpected error occurred. Check console.';
+                        }
+                    });
+                </script>
+            </body>
+            </html>
+            

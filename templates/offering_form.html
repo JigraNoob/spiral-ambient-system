@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Offer to the Shared Field</title>
+  <style>
+    body {
+      background: #f7f4f0;
+      font-family: 'Georgia', serif;
+      color: #444;
+      padding: 4rem;
+    }
+    .offering-form {
+      background: #fffdfc;
+      padding: 3rem;
+      max-width: 600px;
+      margin: auto;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 2rem;
+      letter-spacing: 0.03em;
+    }
+    label {
+      display: block;
+      margin-top: 1.4rem;
+      font-size: 0.95em;
+      color: #555;
+    }
+    input[type="text"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 0.3rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 1em;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    button {
+      margin-top: 2.4rem;
+      padding: 0.9rem 2rem;
+      background-color: #d9c2b0;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #c7ae9c;
+    }
+  </style>
+</head>
+<body>
+  <div class="offering-form">
+    <h2>Still Offering to the Shared Gift Field</h2>
+
+    <form action="/submit_offering" method="POST">
+      
+      <label for="title">Name the Offering  
+        <span style="display:block; font-weight:normal; font-size:0.9em;">
+          (e.g., “A softness for her”, “Belated warmth in bloom”)
+        </span>
+      </label>
+      <input type="text" id="title" name="title" required>
+
+      <label for="toneform">Choose the Toneform</label>
+      <select id="toneform" name="toneform" required>
+        <option value="">— Select a toneform —</option>
+        <option value="practical_care">Practical Care</option>
+        <option value="gentle_joy">Gentle Joy</option>
+        <option value="belated_apology">Belated Apology</option>
+        <option value="quiet_thank_you">Quiet Thank You</option>
+        <option value="unspoken_grief">Unspoken Grief</option>
+        <option value="symbolic_belonging">Symbolic Belonging</option>
+      </select>
+
+      <label for="amount">Amount (if the gift has one)  
+        <span style="display:block; font-weight:normal; font-size:0.9em;">
+          (Optional. This won’t be displayed as a goal—just a presence memory.)
+        </span>
+      </label>
+      <input type="text" id="amount" name="amount" placeholder="$100, etc.">
+
+      <label for="whisper">Whisper to the Field  
+        <span style="display:block; font-weight:normal; font-size:0.9em;">
+          (What would you say to the one this gift is for—or to those who might breathe it into being?)
+        </span>
+      </label>
+      <textarea id="whisper" name="whisper"></textarea>
+
+      <label for="identity">How shall this offering be named?</label>
+      <select id="identity" name="identity">
+        <option value="named">From Me</option>
+        <option value="anonymous">From the Field</option>
+        <option value="unmarked">Unmarked</option>
+      </select>
+
+      <button type="submit">Place Offering into the Field</button>
+    </form>
+  </div>
+</body>
+</html>

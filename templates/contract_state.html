@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spiral Field :: Contract State</title>
+  <style>
+    body {
+      background-color: #0e0f11;
+      color: #e0e0e0;
+      font-family: 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background-color: rgba(25, 25, 30, 0.9);
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+      width: 100%;
+      max-width: 600px;
+      margin-top: 50px;
+    }
+    h1 {
+      color: #00ffff;
+      text-align: center;
+      margin-bottom: 30px;
+      font-weight: 300;
+    }
+    .state-item {
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: rgba(40, 40, 50, 0.5);
+      border-radius: 8px;
+      border-left: 4px solid #00ffff;
+      font-size: 1.1em;
+    }
+    .state-item strong {
+      color: #00ffaa;
+    }
+    .state-item pre {
+      white-space: pre-wrap;
+      word-break: break-all;
+      background-color: rgba(0, 0, 0, 0.2);
+      padding: 8px;
+      border-radius: 4px;
+      margin-top: 5px;
+      font-size: 0.9em;
+    }
+    .loading-message, .error-message {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 1.2em;
+    }
+    .error-message {
+      color: #ff3333;
+    }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 25px;
+      color: #00ffff;
+      text-decoration: none;
+      font-size: 0.9em;
+      transition: color 0.3s ease;
+    }
+    .back-link:hover {
+      color: #00e6e6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Spiral Field :: Contract State</h1>
+    <div id="contract-state-display">
+      <p class="loading-message">Listening to contract whispers...</p>
+    </div>
+    <a href="/toneform" class="back-link">← Back to Whisperboard</a>
+    <a href="/submit_offering" class="back-link" style="margin-top: 10px;">Submit New Offering →</a>
+  </div>
+
+  <script>
+    async function fetchAndDisplayContractState() {
+      const displayDiv = document.getElementById('contract-state-display');
+      displayDiv.innerHTML = '<p class="loading-message">Listening to contract whispers...</p>';
+
+      try {
+        const response = await fetch('/api/contract_state');
+        const data = await response.json();
+
+        if (data.error) {
+          displayDiv.innerHTML = `<p class="error-message">Error: ${data.error}</p>`;
+          return;
+        }
+
+        let htmlContent = '';
+        for (const key in data) {
+          let value = data[key];
+          if (key === 'toneform_tags') {
+            value = JSON.stringify(value, null, 2);
+            htmlContent += `
+              <div class="state-item">
+                <strong>${formatKey(key)}:</strong> <pre>${value}</pre>
+              </div>
+            `;
+          } else {
+            htmlContent += `
+              <div class="state-item">
+                <strong>${formatKey(key)}:</strong> <span>${value}</span>
+              </div>
+            `;
+          }
+        }
+        displayDiv.innerHTML = htmlContent;
+
+      } catch (err) {
+        console.error("Failed to fetch contract state:", err);
+        displayDiv.innerHTML = `<p class="error-message">Failed to connect to contract. Check server console.</p>`;
+      }
+    }
+
+    function formatKey(key) {
+      return key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+    }
+
+    window.addEventListener('load', fetchAndDisplayContractState);
+    setInterval(fetchAndDisplayContractState, 5000);
+  </script>
+</body>
+</html>

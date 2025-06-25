@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Altar Constellation</title>
+    <style>
+        body {
+            background: #f7f4f0;
+            font-family: 'Georgia', serif;
+            color: #444;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 3rem;
+            letter-spacing: 0.05em;
+            font-size: 2.2em;
+            color: #7a6e60;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+        .altar-constellation {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+            margin-bottom: 3rem;
+        }
+        .presence-glyph {
+            background: #fffdfc;
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, opacity 0.5s ease-in-out;
+            cursor: default;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .presence-glyph:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.12);
+        }
+
+        .glyph-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #6a5e50;
+            margin-bottom: 0.8rem;
+            text-align: center;
+        }
+        .glyph-whisper {
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 1rem;
+            font-style: italic;
+            flex-grow: 1;
+        }
+        .glyph-meta {
+            font-size: 0.8em;
+            color: #888;
+            text-align: right;
+            margin-top: 1.5rem;
+        }
+
+        /* Toneform Auras / Colorfields */
+        .presence-glyph::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 15px;
+            pointer-events: none;
+            opacity: 0.15;
+            transition: background 0.5s ease-in-out;
+            z-index: 0;
+        }
+        .presence-glyph.practical_care::before { background: #8bc34a; }
+        .presence-glyph.gentle_joy::before { background: #ffc107; }
+        .presence-glyph.belated_apology::before { background: #9c27b0; }
+        .presence-glyph.quiet_thank_you::before { background: #00bcd4; }
+        .presence-glyph.unspoken_grief::before { background: #607d8b; }
+        .presence-glyph.symbolic_belonging::before { background: #ff7043; }
+        .presence-glyph.unknown::before { background: #ccc; }
+
+        .presence-glyph .content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Fulfillment Styles */
+        .presence-glyph.fulfilled {
+            opacity: 0.6;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            cursor: not-allowed;
+            filter: grayscale(30%);
+        }
+        .presence-glyph.fulfilled::before {
+            opacity: 0.05;
+            background: #ccc;
+        }
+        .presence-glyph.fulfilled .glyph-title,
+        .presence-glyph.fulfilled .glyph-whisper,
+        .presence-glyph.fulfilled .glyph-meta {
+            color: #999;
+        }
+        
+        .fulfill-button-container {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+        .fulfill-button {
+            background-color: #d9c2b0;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            display: inline-block;
+        }
+        .fulfill-button:hover {
+            background-color: #c7ae9c;
+        }
+        .fulfill-button:disabled {
+            background-color: #b0b0b0;
+            cursor: not-allowed;
+        }
+
+        /* Navigation Links (altar_view specific) */
+        .altar-links {
+            margin-top: 3rem;
+            text-align: center;
+            width: 100%;
+            max-width: 600px; /* Constrain width like container */
+        }
+        .altar-links a {
+            color: #00ccff;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 1.1em;
+            transition: color 0.3s ease-in-out;
+        }
+        .altar-links a:hover {
+            color: #00e0ff;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            h2 { font-size: 1.8em; margin-bottom: 2rem; }
+            .altar-constellation { grid-template-columns: 1fr; gap: 20px; }
+            .presence-glyph { padding: 1.5rem; }
+            .altar-links a { margin: 0 10px; font-size: 1em; }
+        }
+    </style>
+</head>
+<body>
+    <h2>Still Offerings: The Altar Constellation</h2>
+
+    <div class="altar-constellation">
+        {% if offerings %}
+            {% for offering in offerings %}
+            <div class="presence-glyph {{ offering.toneform | default('unknown') }} {% if offering.fulfilled %}fulfilled{% endif %}">
+                <div class="content">
+                    <div class="glyph-title">{{ offering.title | default('Untitled Offering') }}</div>
+                    {% if offering.whisper %}
+                        <p class="glyph-whisper">{{ offering.whisper }}</p>
+                    {% endif %}
+                    <div class="glyph-meta">
+                        {{ offering.identity | capitalize | default('Unmarked') }} 
+                        {% if offering.amount %}({{ offering.amount }}){% endif %}
+                        <br>
+                        {{ offering.timestamp | default('Time Unmarked') | truncate(20, True, '...') }}
+                    </div>
+                </div>
+                {% if not offering.fulfilled %}
+                    <div class="fulfill-button-container">
+                        <form action="/fulfill/{{ loop.index0 }}" method="post">
+                            <button type="submit" class="fulfill-button">Fulfill Offering</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="fulfill-button-container">
+                        <button type="button" class="fulfill-button" disabled>Fulfilled</button>
+                    </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="text-align: center; width: 100%; color: #888;">The constellation is quiet. No offerings yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="altar-links">
+        <a href="/offer" style="color: #00ccff; text-decoration: none; margin-right: 20px;">Offer to the Field</a>
+        <a href="/steward" style="color: #00ccff; text-decoration: none;">Steward the Offerings</a>
+        <a href="/" style="color: #00ccff; text-decoration: none; margin-left: 20px;">Return to Altar</a>
+    </div>
+</body>
+</html>

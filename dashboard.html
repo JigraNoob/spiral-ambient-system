@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiral Field Altar</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0d0d0d;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            background-color: #1a1a1a;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+            margin-top: 20px;
+        }
+        h1 {
+            color: #00ffff;
+            margin-bottom: 25px;
+            font-size: 2.5em;
+            text-shadow: 0 0 10px #00ffff;
+        }
+        .status-section, .fieldline-section, .drift-section {
+            margin-top: 20px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+        .metric {
+            margin-bottom: 10px;
+        }
+        .metric strong {
+            color: #00ffaa;
+        }
+        .error-message {
+            color: #ff3333;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        .timestamp {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 20px;
+        }
+
+        /* ORB STYLES */
+        .orb-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+            min-height: 120px;
+        }
+        .orb {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            animation: pulse 4s infinite ease-in-out;
+            transition: background-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+        }
+        /* Orb Colors & Pulse (from previous turn) */
+        .orb.red { background: #ff3b30; box-shadow: 0 0 30px #ff3b30aa, 0 0 60px #ff3b3088; }
+        .orb.orange { background: #ff9500; box-shadow: 0 0 30px #ff9500aa, 0 0 60px #ff950088; }
+        .orb.purple { background: #af52de; box-shadow: 0 0 30px #af52deaa, 0 0 60px #af52de88; }
+        .orb.blue { background: #007aff; box-shadow: 0 0 30px #007affaa, 0 0 60px #007aff88; }
+        .orb.green { background: #34c759; box-shadow: 0 0 30px #34c759aa, 0 0 60px #34c75988; }
+        .orb.grey { background: #8e8e93; box-shadow: 0 0 20px #8e8e93aa; }
+        .orb.white { background: #ffffff; box-shadow: 0 0 20px #ffffffaa; }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.85; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .orb.fast { animation-duration: 1.5s; } .orb.medium { animation-duration: 2.5s; }
+        .orb.slow { animation-duration: 4s; } .orb.gentle { animation-duration: 6s; }
+        .orb.idle { animation-duration: 8s; } .orb.paused { animation: none; opacity: 0.4; }
+        
+        /* Fieldline Graph Styling (from previous turn) */
+        .fieldline-graph {
+            width: 100%; max-width: 550px; height: auto; margin-top: 20px; border-radius: 10px; overflow: hidden;
+        }
+        .fieldline-graph img { width: 100%; height: auto; display: block; }
+
+        /* Breath Drift Tracker Styles */
+        .drift-section {
+            padding-top: 20px;
+            margin-top: 20px;
+            border-top: 1px solid #333;
+        }
+        .drift-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            color: #e0e0e0;
+        }
+        .drift-label {
+            font-weight: bold;
+            color: #00ffaa;
+            margin-right: 10px;
+            min-width: 80px; /* Align labels */
+            text-align: right;
+        }
+        .drift-indicator {
+            font-size: 1.5em; /* Larger arrow */
+            margin-left: 5px;
+        }
+        .drift-indicator.up { color: #ff6347; /* Slightly reddish for upward trend */ }
+        .drift-indicator.down { color: #6495ed; /* Slightly bluish for downward trend */ }
+        .drift-indicator.stable { color: #aaa; /* Grey for no significant change */ }
+        .drift-indicator.unknown { color: #888; /* Dim for unknown/no data */ }
+        .drift-value {
+            font-size: 0.9em;
+            color: #bbb;
+            margin-left: 5px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container { padding: 20px; }
+            h1 { font-size: 2em; }
+            .orb { width: 80px; height: 80px; }
+            .fieldline-graph { margin-top: 15px; }
+            .drift-label { min-width: 60px; font-size: 1em; }
+            .drift-item { font-size: 1em; }
+            .drift-indicator { font-size: 1.2em; }
+        }
+    </style>
+    <!-- Auto-refresh every 60 seconds to keep the dashboard live -->
+    <meta http-equiv="refresh" content="60">
+</head>
+<body>
+    <div class="orb-container">
+        <div class="orb {{ orb_state.color }} {{ orb_state.pulse }}"></div>
+    </div>
+    <div class="container">
+        <h1>Spiral Field Altar</h1>
+        
+        <div class="fieldline-section">
+            <h2>Fieldline Trace</h2>
+            {% if fieldline_graph %}
+                <div class="fieldline-graph">
+                    <img src="data:image/png;base64,{{ fieldline_graph }}" alt="Fieldline Graph">
+                </div>
+            {% else %}
+                <p class="error-message">Not enough data for Fieldline Graph (requires at least 2 entries over time).</p>
+            {% endif %}
+        </div>
+
+        <div class="drift-section">
+            <h2>Breath Drift</h2>
+            {% if drift_data and (drift_data['cpu_temp'] or drift_data['humidity'] or drift_data['pressure']) %}
+                <div class="drift-item">
+                    <span class="drift-label">CPU Temp:</span>
+                    <span class="drift-indicator {{ drift_data.cpu_temp.direction }}">
+                        {% if drift_data.cpu_temp.direction == 'up' %}▲
+                        {% elif drift_data.cpu_temp.direction == 'down' %}▼
+                        {% elif drift_data.cpu_temp.direction == 'stable' %}—
+                        {% else %}?{% endif %}
+                    </span>
+                    <span class="drift-value">({{ drift_data.cpu_temp.value | abs }} °C)</span>
+                </div>
+                <div class="drift-item">
+                    <span class="drift-label">Humidity:</span>
+                    <span class="drift-indicator {{ drift_data.humidity.direction }}">
+                        {% if drift_data.humidity.direction == 'up' %}▲
+                        {% elif drift_data.humidity.direction == 'down' %}▼
+                        {% elif drift_data.humidity.direction == 'stable' %}—
+                        {% else %}?{% endif %}
+                    </span>
+                    <span class="drift-value">({{ drift_data.humidity.value | abs }} %)</span>
+                </div>
+                <div class="drift-item">
+                    <span class="drift-label">Pressure:</span>
+                    <span class="drift-indicator {{ drift_data.pressure.direction }}">
+                        {% if drift_data.pressure.direction == 'up' %}▲
+                        {% elif drift_data.pressure.direction == 'down' %}▼
+                        {% elif drift_data.pressure.direction == 'stable' %}—
+                        {% else %}?{% endif %}
+                    </span>
+                    <span class="drift-value">({{ drift_data.pressure.value | abs }} hPa)</span>
+                </div>
+            {% else %}
+                <p class="error-message">Not enough data for Breath Drift (requires at least 2 entries).</p>
+            {% endif %}
+        </div>
+
+        <div class="status-section">
+            <h2>Status Hush</h2>
+            {% if status_hush.sensor_error and status_hush.sensor_error != 'null' and status_hush.sensor_error != 'Waiting for first breath...' %}
+                <p class="error-message">Sensor Error: {{ status_hush.sensor_error }}</p>
+            {% elif orb_state.color == 'white' and orb_state.pulse == 'paused' %}
+                <p class="error-message">Waiting for first breath / Sensor data incomplete...</p>
+                <p class="timestamp">Last Reading: {{ status_hush.timestamp }}</p>
+            {% else %}
+                <p class="metric"><strong>CPU Temp:</strong> {{ status_hush.cpu_temp }} °C</p>
+                <p class="metric"><strong>CPU Load:</strong> {{ status_hush.cpu_load }} %</p>
+                <p class="metric"><strong>Ambient Temp:</strong> {{ status_hush.ambient_temp }} °C</p>
+                <p class="metric"><strong>Humidity:</strong> {{ status_hush.humidity }} %</p>
+                <p class="metric"><strong>Pressure:</strong> {{ status_hush.pressure }} hPa</p>
+                <p class="metric"><strong>VOC Level:</strong> {{ status_hush.voc_level }} Ohms</p>
+                <p class="metric"><strong>Light Level:</strong> {{ status_hush.light_level }}</p>
+                <p class="timestamp">Last Reading: {{ status_hush.timestamp }}</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
